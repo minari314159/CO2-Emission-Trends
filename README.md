@@ -1,4 +1,7 @@
-Global greenhouse gas emissions continue to rise at a time when they need to be rapidly falling.
+# Greenhouse Gas Emission by Sector
+## Data Analysis & Visualization
+
+**Global greenhouse gas emissions continue to rise at a time when they need to be rapidly falling.**
 
 To effectively reduce emissions, we need to know where they come from – which sectors contribute the most? How can we use this understanding to develop effective solutions and mitigation strategies?
 
