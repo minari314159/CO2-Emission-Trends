@@ -37,16 +37,16 @@ selection = st.sidebar.selectbox(
     label='Choose a Continent', 
     options=continent_options)
 
-st.sidebar.subheader('Year')
-year_options = df_GHG_Con['Year'].unique().tolist()
-year = st.sidebar.select_slider(
-    label='Year Range', 
-    options=year_options,
-    value=(year_options[0],year_options[30]))
+# st.sidebar.subheader('Year')
+# year_options = df_GHG_Con['Year'].unique().tolist()
+# year = st.sidebar.select_slider(
+#     label='Year Range', 
+#     options=year_options,
+#     value=(year_options[0],year_options[30]))
 
 
 st.sidebar.subheader('Choose a Green House Gas')
-choose_GHG = st.sidebar.selectbox('Select data', ('All', 'CO2','CH4','NOx'))
+choose_GHG = st.sidebar.selectbox('Select', ('All', 'CO2','CH4','NOx'))
 
 st.sidebar.markdown('''
 ---
@@ -132,7 +132,7 @@ with col2:
 with col1:
 
     df_All = load_CAN_sector()
-    palette = ['#b5838d', '#84a59d', '#f28482']
+    palette = ['#a2d2ff', '#0466c8', '#e63946']
     
     def create_bar_chart(value,color=None):
         plost.bar_chart(
