@@ -1,6 +1,9 @@
 import pandas as pd
 
+
 def load_GHG():
+    """Loads and melts the Greenhouse Gas dataset"""
+
     df_GHG = pd.read_csv('Data/GHG_Emissions.csv')
     df_GHG.rename(columns={
         'Greenhouse gas emissions from agriculture': 'Agriculture',
@@ -18,10 +21,12 @@ def load_GHG():
 
     return df_GHG
 
+
 def load_sector_data():
     df_Sector = pd.read_csv('Data/Global_GHG_Emissions_by_Sector.csv')
 
     return df_Sector
+
 
 def load_CAN_sector():
     df_All = pd.read_csv('Data/AllGHG_Can.csv')
