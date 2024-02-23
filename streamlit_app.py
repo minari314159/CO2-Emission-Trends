@@ -2,7 +2,7 @@
 import streamlit as st
 from load_data import load_GHG, load_CAN_sector
 import pandas as pd 
-from plotting import lineplot, bubbleplot, barplot
+from plotting import lineplot, bubbleplot, barplot, stackplot
 
 
 st.set_page_config(
@@ -42,7 +42,7 @@ choose_year = st.sidebar.slider("Year", 1990, 2020, 2020)
 
 st.sidebar.subheader('Filter Through A Green House Gas')
 df_All = load_CAN_sector()
-ghg_options = ['CO2 Emission (%)',
+ghg_options = ['All', 'CO2 Emission (%)',
                'CH4 Emission (%)', 'NOx Emission (%)']
 choose_GHG = st.sidebar.selectbox(
     'Select', ghg_options)
@@ -110,6 +110,13 @@ with col1:
 # All GHG Together
 with col2:
     for ghg in ghg_options:
-        if choose_GHG == ghg:
-            df_All = df_All[['Sub-sector', ghg]]
-            barplot(df_All, 'Sub-sector', ghg)
+        if choose_GHG == 'All':
+            df_All = df_All.loc[:, ['Sub-sector', 'CO2 Emission (%)',
+                           'CH4 Emission (%)', 'NOx Emission (%)']]
+            stackplot(df_All, 'Sub-sector', 'CO2 Emission (%)',
+                                           'CH4 Emission (%)', 'NOx Emission (%)')
+            break
+        elif choose_GHG == ghg:
+            df_em = df_All[['Sub-sector', ghg]]
+            barplot(df_em, 'Sub-sector', ghg)
+       

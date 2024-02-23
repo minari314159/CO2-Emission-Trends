@@ -60,10 +60,23 @@ def bubbleplot(df, category, title: str, figx: int, figy: int, labels, fill: str
 
 
 def barplot(df, x, y):
-    fig, ax = plt.subplots(figsize=(6, 5))
-    ax.barh(df[x], df[y])
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.barh(df[x], df[y], color='#f7768e', alpha=0.3)
     ax.set_xlabel("Emission (%)", fontsize=10)
     ax.set_title(f"Canadian {y}\nper Industry Sector",
+                 loc='left', fontsize=14, fontweight='bold', y=1.05)
+    plt.tight_layout()
+
+    return st.pyplot(fig, use_container_width=True)
+
+
+def stackplot(df, x, col1, col2, col3):
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.barh(df[x], df[col1], color='#f7768e', alpha=0.3)
+    ax.barh(df[x], df[col2], color='#84a59d', alpha=0.5)
+    ax.barh(df[x], df[col3], color='#598392', alpha=0.3)
+    ax.set_xlabel("Emission (%)", fontsize=10)
+    ax.set_title(f"All Emissions per Industry Sector",
                  loc='left', fontsize=14, fontweight='bold', y=1.05)
     plt.tight_layout()
 
