@@ -29,16 +29,17 @@ st.sidebar.subheader('Continent Selection')
 
 df_GHG_Con = load_GHG()
 df_GHG_Con = df_GHG_Con[df_GHG_Con['Entity'].isin(
-    ['World', 'Asia', 'Africa', 'Oceania', 'Europe', 'North America', 'South America'])].query(
-    'Year >= 1900 & Year <= 2020')
+    ['World', 'Asia', 'Africa', 'Oceania', 'Europe', 'North America', 'South America'])].query('Year >= 1900 & Year <= 2020')
 continent_options = df_GHG_Con.iloc[:, 1].unique().tolist()
 selection = st.sidebar.selectbox(
     label='Choose a Continent',
     options=continent_options)
 
-year_options = df_GHG_Con.iloc[:, 0].unique().tolist()
+st.sidebar.subheader('Filter Through the Years')
+year_options = df_GHG_Con.iloc[:, 0].unique()
+choose_year = st.sidebar.slider("Year", 1990, 2020, 2020)
 
-st.sidebar.subheader('Choose a Green House Gas')
+st.sidebar.subheader('Filter Through A Green House Gas')
 df_All = load_CAN_sector()
 ghg_options = ['CO2 Emission (%)',
                'CH4 Emission (%)', 'NOx Emission (%)']
@@ -62,6 +63,7 @@ col1, col2 = st.columns(2)
 
 
 with col2:
+
     for c in continent_options:
         if selection == c:
             df_plot = df_GHG_Con[df_GHG_Con['Entity'].isin([c])]
