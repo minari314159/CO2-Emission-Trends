@@ -1,6 +1,7 @@
 
 import streamlit as st
-from load_data import load_GHG, load_sector_data, load_CAN_sector
+from load_data import load_GHG, load_CAN_sector
+import pandas as pd 
 from plotting import lineplot, bubbleplot, barplot
 
 
@@ -68,13 +69,28 @@ with col2:
         if selection == c:
             df_plot = df_GHG_Con[df_GHG_Con['Entity'].isin([c])]
 
-            lineplot(df_plot, 'Year', 'Emission (M)',
+            lineplot(df_plot, 'Year', 'Emission (Mt)',
                      "Greenhouse Gas Emissions\nOver Three Decades")
 
 with col1:
-    df_Sector = load_sector_data()
-    bubbleplot(df_Sector, 'Share of global greenhouse gas emissions (%)',
-               "Proportion of Global\nGHG Emissions per Sector", 8, 8, 'Sub-sector', '#f7768e', '#f7768e')
+
+    total_emission_per_continent = df_GHG_Con.groupby('Entity')[
+    'Emission (Mt)'].sum()
+    continent_emission = []
+    c = []
+    for continent in df_GHG_Con['Entity'].unique():
+        sector_sum = df_GHG_Con[df_GHG_Con['Entity'].isin([continent])].groupby('Industries')['Emission (Mt)'].sum()
+        percent_emission = abs((sector_sum / total_emission_per_continent.loc[continent]))* 100
+        continent_emission.append(percent_emission)
+        c.append(continent)
+
+    emission = dict(map(lambda i,j : (i,j), c, continent_emission))
+    df_Sector = pd.DataFrame(emission).reset_index()
+
+    for con in continent_options:
+        if selection == con:
+            bubbleplot(df_Sector, con,
+                    f"Proportion of {con}'s\nGHG Emissions per Sector", 8, 8, 'Industries', '#f7768e', '#f7768e')
 st.divider()
 
 # --------------------------------------------------------------------- #
@@ -88,7 +104,7 @@ with col1:
     df_GHG_Can = load_GHG()
     df_GHG_Can = df_GHG_Can[df_GHG_Can['Entity'].isin(['Canada'])]
 
-    lineplot(df_GHG_Can, 'Year', 'Emission (M)',
+    lineplot(df_GHG_Can, 'Year', 'Emission (Mt)',
              "Canadian Greenhouse Gas\nEmissions Over 3 Decades")
 
 # All GHG Together

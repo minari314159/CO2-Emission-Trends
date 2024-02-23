@@ -17,9 +17,9 @@ def load_GHG():
         'Greenhouse gas emissions from waste': 'Waste',
         'Greenhouse gas emissions from buildings': 'Buildings',
         'Greenhouse gas emissions from industry': 'Industry',
-        'Greenhouse gas emissions from manufacturing and construction': 'Manufacturing\nConstruction',
+        'Greenhouse gas emissions from manufacturing and construction': 'Manufacturing\n& Construction',
         'Greenhouse gas emissions from transport': 'Transport',
-        'Greenhouse gas emissions from electricity and heat': 'Electricity and Heat',
+        'Greenhouse gas emissions from electricity and heat': 'Electricity\n& Heat',
         'Fugitive emissions of greenhouse gases from energy production': 'Energy Production',
         'Greenhouse gas emissions from other fuel combustion': 'Fuel Combustion',
         'Greenhouse gas emissions from bunker fuels': 'Bunker Fuel'}, inplace=True)
@@ -32,7 +32,7 @@ def load_GHG():
 
     #Melts dataframe to long format
     df_GHG = df_GHG.melt(id_vars=['Year', 'Entity'], value_vars=['Agriculture', 'Forestry', 'Waste', 'Buildings', 'Industry',
-    'Manufacturing\nConstruction', 'Electricity and Heat', 'Energy Production', 'Fuel Combustion', 'Bunker Fuel'], var_name='Industries', value_name='Emission (M)')
+    'Manufacturing\n& Construction', 'Electricity\n& Heat', 'Energy Production', 'Fuel Combustion', 'Bunker Fuel'], var_name='Industries', value_name='Emission (Mt)')
 
     return df_GHG
 

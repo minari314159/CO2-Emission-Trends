@@ -43,8 +43,8 @@ def bubbleplot(df, category, title: str, figx: int, figy: int, labels, fill: str
     plt.ylim(-lim, lim)
     ax.set_title(title,
                  loc='center', fontsize=20, fontweight='bold', y=1.05)
-    labels = df[labels].unique().tolist()
-
+    labels = df[labels].tolist()
+ 
     # print circles
     for circle, label in zip(circles, labels):
         x, y, r = circle
