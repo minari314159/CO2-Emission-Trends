@@ -1,0 +1,1631 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+		<title>Greenhouse Gas Emissions Dashboard</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+		<link
+			href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Outfit:wght@300;400;600;700;800&display=swap"
+			rel="stylesheet" />
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+			:root {
+				--bg: #080c10;
+				--surface: #0d1117;
+				--card: #161b22;
+				--border: #21262d;
+				--border2: #30363d;
+				--text: #e6edf3;
+				--muted: #8b949e;
+				--dim: #484f58;
+				--green: #3fb950;
+				--blue: #58a6ff;
+				--red: #f78166;
+				--purple: #d2a8ff;
+				--orange: #ffa657;
+				--yellow: #e3b341;
+				--teal: #79c0ff;
+				--pink: #f085a2;
+			}
+			html {
+				scroll-behavior: smooth;
+			}
+			body {
+				font-family: "Outfit", sans-serif;
+				background: var(--bg);
+				color: var(--text);
+				min-height: 100vh;
+			}
+			::-webkit-scrollbar {
+				width: 5px;
+				height: 5px;
+			}
+			::-webkit-scrollbar-track {
+				background: var(--bg);
+			}
+			::-webkit-scrollbar-thumb {
+				background: var(--border2);
+				border-radius: 3px;
+			}
+
+			/* ── HEADER ── */
+			header {
+				background: var(--surface);
+				border-bottom: 1px solid var(--border);
+				padding: 18px 32px;
+				display: flex;
+				align-items: center;
+				gap: 16px;
+				position: sticky;
+				top: 0;
+				z-index: 100;
+			}
+			.logo {
+				width: 40px;
+				height: 40px;
+				border-radius: 10px;
+				background: linear-gradient(135deg, #1a4a1a, #0d2e0d);
+				border: 1px solid var(--green);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 18px;
+			}
+			.header-text h1 {
+				font-family: "IBM Plex Mono", monospace;
+				font-size: 16px;
+				font-weight: 700;
+				color: var(--text);
+				letter-spacing: 0.5px;
+			}
+			.header-text p {
+				font-size: 11px;
+				color: var(--muted);
+				margin-top: 1px;
+				font-family: "IBM Plex Mono", monospace;
+			}
+			.header-badge {
+				margin-left: auto;
+				background: #0d2e0d;
+				border: 1px solid var(--green);
+				color: var(--green);
+				font-size: 10px;
+				font-family: "IBM Plex Mono", monospace;
+				padding: 4px 10px;
+				border-radius: 4px;
+				letter-spacing: 0.5px;
+			}
+			.header-tabs {
+				display: flex;
+				gap: 4px;
+				margin-left: 24px;
+			}
+			.tab-btn {
+				background: transparent;
+				border: 1px solid var(--border);
+				color: var(--muted);
+				border-radius: 6px;
+				padding: 6px 14px;
+				font-size: 12px;
+				font-family: "Outfit", sans-serif;
+				font-weight: 600;
+				cursor: pointer;
+				transition: all 0.15s;
+			}
+			.tab-btn:hover {
+				border-color: var(--border2);
+				color: var(--text);
+			}
+			.tab-btn.active {
+				background: var(--card);
+				border-color: var(--blue);
+				color: var(--blue);
+			}
+
+			/* ── LAYOUT ── */
+			.page {
+				display: none;
+				padding: 28px 32px;
+				max-width: 1400px;
+				margin: 0 auto;
+			}
+			.page.active {
+				display: block;
+			}
+
+			/* ── KPI CARDS ── */
+			.kpi-grid {
+				display: grid;
+				grid-template-columns: repeat(6, 1fr);
+				gap: 14px;
+				margin-bottom: 28px;
+			}
+			.kpi-card {
+				background: var(--card);
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 16px;
+				position: relative;
+				overflow: hidden;
+			}
+			.kpi-card::before {
+				content: "";
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				height: 2px;
+			}
+			.kpi-card.green::before {
+				background: var(--green);
+			}
+			.kpi-card.blue::before {
+				background: var(--blue);
+			}
+			.kpi-card.red::before {
+				background: var(--red);
+			}
+			.kpi-card.purple::before {
+				background: var(--purple);
+			}
+			.kpi-card.orange::before {
+				background: var(--orange);
+			}
+			.kpi-card.yellow::before {
+				background: var(--yellow);
+			}
+			.kpi-label {
+				font-size: 10px;
+				color: var(--muted);
+				font-family: "IBM Plex Mono", monospace;
+				letter-spacing: 0.8px;
+				text-transform: uppercase;
+				margin-bottom: 6px;
+			}
+			.kpi-value {
+				font-size: 24px;
+				font-weight: 800;
+				color: var(--text);
+				line-height: 1;
+			}
+			.kpi-unit {
+				font-size: 11px;
+				color: var(--muted);
+				margin-top: 3px;
+			}
+
+			/* ── SECTION ── */
+			.section-title {
+				font-family: "IBM Plex Mono", monospace;
+				font-size: 10px;
+				font-weight: 700;
+				color: var(--muted);
+				letter-spacing: 2px;
+				text-transform: uppercase;
+				margin-bottom: 16px;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			.section-title::after {
+				content: "";
+				flex: 1;
+				height: 1px;
+				background: var(--border);
+			}
+
+			/* ── GRID LAYOUTS ── */
+			.grid-2 {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 18px;
+				margin-bottom: 18px;
+			}
+			.grid-3 {
+				display: grid;
+				grid-template-columns: 1fr 1fr 1fr;
+				gap: 18px;
+				margin-bottom: 18px;
+			}
+			.grid-2-1 {
+				display: grid;
+				grid-template-columns: 2fr 1fr;
+				gap: 18px;
+				margin-bottom: 18px;
+			}
+			.grid-1-2 {
+				display: grid;
+				grid-template-columns: 1fr 2fr;
+				gap: 18px;
+				margin-bottom: 18px;
+			}
+			.full {
+				margin-bottom: 18px;
+			}
+			.span-2 {
+				grid-column: span 2;
+			}
+
+			/* ── CHART CARD ── */
+			.chart-card {
+				background: var(--card);
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				padding: 20px;
+			}
+			.chart-card h3 {
+				font-size: 13px;
+				font-weight: 600;
+				color: var(--text);
+				margin-bottom: 4px;
+			}
+			.chart-card p {
+				font-size: 11px;
+				color: var(--muted);
+				margin-bottom: 16px;
+			}
+			.chart-wrap {
+				position: relative;
+			}
+			.chart-wrap canvas {
+				max-height: 280px;
+			}
+			.chart-wrap.tall canvas {
+				max-height: 340px;
+			}
+			.chart-wrap.short canvas {
+				max-height: 200px;
+			}
+			.chart-wrap.heatmap-wrap {
+				overflow-x: auto;
+			}
+
+			/* ── HEATMAP (pure CSS table) ── */
+			.heatmap-table {
+				border-collapse: collapse;
+				width: 100%;
+				font-size: 11px;
+				font-family: "IBM Plex Mono", monospace;
+			}
+			.heatmap-table th {
+				padding: 6px 10px;
+				color: var(--muted);
+				font-weight: 600;
+				text-align: center;
+				font-size: 10px;
+				letter-spacing: 0.5px;
+			}
+			.heatmap-table td {
+				padding: 8px 10px;
+				text-align: center;
+				font-weight: 600;
+				font-size: 11px;
+				border: 1px solid var(--bg);
+				border-radius: 2px;
+			}
+			.hm-label {
+				color: var(--muted);
+				text-align: left !important;
+				font-weight: 400;
+				white-space: nowrap;
+			}
+
+			/* ── FILTER BAR ── */
+			.filter-bar {
+				display: flex;
+				gap: 10px;
+				flex-wrap: wrap;
+				margin-bottom: 20px;
+				background: var(--card);
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 14px 18px;
+				align-items: center;
+			}
+			.filter-bar label {
+				font-size: 11px;
+				color: var(--muted);
+				font-family: "IBM Plex Mono", monospace;
+			}
+			.filter-select {
+				background: var(--surface);
+				border: 1px solid var(--border2);
+				color: var(--text);
+				border-radius: 6px;
+				padding: 6px 12px;
+				font-size: 12px;
+				font-family: "Outfit", sans-serif;
+				cursor: pointer;
+			}
+			.filter-select:focus {
+				outline: none;
+				border-color: var(--blue);
+			}
+
+			/* ── RANKING TABLE ── */
+			.rank-table {
+				width: 100%;
+				border-collapse: collapse;
+			}
+			.rank-table th {
+				font-size: 10px;
+				font-family: "IBM Plex Mono", monospace;
+				color: var(--muted);
+				padding: 8px 12px;
+				text-align: left;
+				letter-spacing: 0.5px;
+				text-transform: uppercase;
+				border-bottom: 1px solid var(--border);
+			}
+			.rank-table td {
+				padding: 9px 12px;
+				font-size: 12px;
+				border-bottom: 1px solid var(--border);
+			}
+			.rank-table tr:last-child td {
+				border-bottom: none;
+			}
+			.rank-table tr:hover td {
+				background: rgba(255, 255, 255, 0.02);
+			}
+			.bar-cell {
+				position: relative;
+				min-width: 120px;
+			}
+			.bar-inner {
+				height: 6px;
+				border-radius: 3px;
+				display: inline-block;
+			}
+			.rank-num {
+				width: 24px;
+				height: 24px;
+				border-radius: 6px;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 10px;
+				font-weight: 700;
+				font-family: "IBM Plex Mono", monospace;
+			}
+
+			/* ── INSIGHT PILL ── */
+			.insight-row {
+				display: flex;
+				gap: 10px;
+				flex-wrap: wrap;
+				margin-bottom: 18px;
+			}
+			.insight {
+				background: var(--card);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 10px 14px;
+				font-size: 12px;
+				flex: 1;
+				min-width: 200px;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			.insight .icon {
+				font-size: 18px;
+			}
+			.insight strong {
+				color: var(--text);
+			}
+			.insight span {
+				color: var(--muted);
+			}
+
+			@keyframes fadeIn {
+				from {
+					opacity: 0;
+					transform: translateY(8px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+			.page.active .chart-card,
+			.page.active .kpi-card {
+				animation: fadeIn 0.3s ease both;
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<div class="logo">🌍</div>
+			<div class="header-text">
+				<h1>GHG EMISSIONS DASHBOARD</h1>
+				<p>2000–2023 · 15 Countries · 8 Industries · 5 Gas Types</p>
+			</div>
+			<span class="header-badge">● LIVE DATA</span>
+			<div class="header-tabs">
+				<button class="tab-btn active" onclick="showPage('overview', this)">
+					Overview
+				</button>
+				<button class="tab-btn" onclick="showPage('country', this)">
+					By Country
+				</button>
+				<button class="tab-btn" onclick="showPage('industry', this)">
+					By Industry
+				</button>
+				<button class="tab-btn" onclick="showPage('gas', this)">
+					By Gas Type
+				</button>
+			</div>
+		</header>
+
+		<!-- ═══════════════════════════════════════════════════════════════ -->
+		<!-- PAGE: OVERVIEW                                                  -->
+		<!-- ═══════════════════════════════════════════════════════════════ -->
+		<div class="page active" id="page-overview">
+			<div class="kpi-grid">
+				<div class="kpi-card green">
+					<div class="kpi-label">Total Emissions</div>
+					<div class="kpi-value" id="kpi-total">—</div>
+					<div class="kpi-unit">Gt CO₂e (2000–2023)</div>
+				</div>
+				<div class="kpi-card blue">
+					<div class="kpi-label">Peak Year</div>
+					<div class="kpi-value" id="kpi-peak">—</div>
+					<div class="kpi-unit">Highest annual total</div>
+				</div>
+				<div class="kpi-card red">
+					<div class="kpi-label">Top Emitter</div>
+					<div
+						class="kpi-value"
+						id="kpi-top"
+						style="font-size: 16px; margin-top: 4px">
+						—
+					</div>
+					<div class="kpi-unit">Cumulative leader</div>
+				</div>
+				<div class="kpi-card orange">
+					<div class="kpi-label">Growth (2000→2023)</div>
+					<div class="kpi-value" id="kpi-change">—</div>
+					<div class="kpi-unit">Recent vs early period</div>
+				</div>
+				<div class="kpi-card purple">
+					<div class="kpi-label">Countries Tracked</div>
+					<div class="kpi-value" id="kpi-countries">—</div>
+					<div class="kpi-unit">Across 6 regions</div>
+				</div>
+				<div class="kpi-card yellow">
+					<div class="kpi-label">Years of Data</div>
+					<div class="kpi-value" id="kpi-years">—</div>
+					<div class="kpi-unit">2000 – 2023</div>
+				</div>
+			</div>
+
+			<div class="insight-row">
+				<div class="insight">
+					<span class="icon">📈</span>
+					<div>
+						<strong>Asia dominates</strong>
+						<span
+							>— China, India, and Indonesia together account for over 40% of
+							all tracked emissions</span
+						>
+					</div>
+				</div>
+				<div class="insight">
+					<span class="icon">⚡</span>
+					<div>
+						<strong>Energy is the largest sector</strong>
+						<span
+							>— responsible for roughly 22% of total emissions across all
+							countries</span
+						>
+					</div>
+				</div>
+				<div class="insight">
+					<span class="icon">🌡️</span>
+					<div>
+						<strong>CO₂ is the biggest culprit</strong>
+						<span
+							>— making up ~40% of all emissions, driven primarily by energy and
+							transport</span
+						>
+					</div>
+				</div>
+				<div class="insight">
+					<span class="icon">📉</span>
+					<div>
+						<strong>Europe declining</strong>
+						<span
+							>— UK, France, and Germany all show consistent downward trends
+							since 2005</span
+						>
+					</div>
+				</div>
+			</div>
+
+			<div class="section-title">Global Trends</div>
+			<div class="grid-2">
+				<div class="chart-card">
+					<h3>Global Emissions Over Time</h3>
+					<p>Total annual emissions across all 15 countries, 2000–2023</p>
+					<div class="chart-wrap"><canvas id="c-global-trend"></canvas></div>
+				</div>
+				<div class="chart-card">
+					<h3>Year-on-Year Change (%)</h3>
+					<p>
+						Global emission growth rate — dips in 2009 (GFC) and 2020 (COVID-19)
+					</p>
+					<div class="chart-wrap"><canvas id="c-yoy"></canvas></div>
+				</div>
+			</div>
+
+			<div class="section-title">Composition</div>
+			<div class="grid-3">
+				<div class="chart-card">
+					<h3>Emissions by Gas Type</h3>
+					<p>Cumulative share of each greenhouse gas</p>
+					<div class="chart-wrap"><canvas id="c-gas-pie"></canvas></div>
+				</div>
+				<div class="chart-card">
+					<h3>Emissions by Industry</h3>
+					<p>Which sectors drive the most pollution</p>
+					<div class="chart-wrap"><canvas id="c-ind-pie"></canvas></div>
+				</div>
+				<div class="chart-card">
+					<h3>Emissions by Region</h3>
+					<p>Regional stacked area — 2000 to 2023</p>
+					<div class="chart-wrap"><canvas id="c-region"></canvas></div>
+				</div>
+			</div>
+		</div>
+
+		<!-- ═══════════════════════════════════════════════════════════════ -->
+		<!-- PAGE: BY COUNTRY                                                -->
+		<!-- ═══════════════════════════════════════════════════════════════ -->
+		<div class="page" id="page-country">
+			<div class="section-title">Country Overview</div>
+			<div class="grid-2-1">
+				<div class="chart-card">
+					<h3>Top 6 Country Emission Trends</h3>
+					<p>Annual totals for the six largest emitters</p>
+					<div class="chart-wrap tall">
+						<canvas id="c-country-trend"></canvas>
+					</div>
+				</div>
+				<div class="chart-card">
+					<h3>Total Emissions Ranking</h3>
+					<p>Cumulative 2000–2023 (Mt CO₂e)</p>
+					<div id="country-rank-table"></div>
+				</div>
+			</div>
+
+			<div class="section-title">Per-Capita & Gas Breakdown</div>
+			<div class="grid-2">
+				<div class="chart-card">
+					<h3>Emissions Per Capita</h3>
+					<p>Total emissions ÷ population (Mt per million people)</p>
+					<div class="chart-wrap"><canvas id="c-per-capita"></canvas></div>
+				</div>
+				<div class="chart-card">
+					<h3>Gas Mix by Country (Top 6)</h3>
+					<p>Stacked share of CO₂, CH₄, N₂O, HFCs, SF₆</p>
+					<div class="chart-wrap">
+						<canvas id="c-country-gas-stack"></canvas>
+					</div>
+				</div>
+			</div>
+
+			<div class="section-title">Interactive Explorer</div>
+			<div class="filter-bar">
+				<label>COUNTRY</label>
+				<select
+					class="filter-select"
+					id="sel-country"
+					onchange="updateCountryDetail()"></select>
+				<label style="margin-left: 12px">METRIC</label>
+				<select
+					class="filter-select"
+					id="sel-metric"
+					onchange="updateCountryDetail()">
+					<option value="industry">By Industry</option>
+					<option value="gas">By Gas Type</option>
+				</select>
+			</div>
+			<div class="chart-card full">
+				<h3 id="country-detail-title">Country Deep Dive</h3>
+				<p id="country-detail-sub">Select a country and metric above</p>
+				<div class="chart-wrap tall">
+					<canvas id="c-country-detail"></canvas>
+				</div>
+			</div>
+		</div>
+
+		<!-- ═══════════════════════════════════════════════════════════════ -->
+		<!-- PAGE: BY INDUSTRY                                               -->
+		<!-- ═══════════════════════════════════════════════════════════════ -->
+		<div class="page" id="page-industry">
+			<div class="section-title">Industry Overview</div>
+			<div class="grid-2">
+				<div class="chart-card">
+					<h3>Industry Emissions Over Time</h3>
+					<p>Annual totals per sector, 2000–2023</p>
+					<div class="chart-wrap tall"><canvas id="c-ind-trend"></canvas></div>
+				</div>
+				<div class="chart-card">
+					<h3>Industry Share (Stacked Area)</h3>
+					<p>Relative contribution of each sector year by year</p>
+					<div class="chart-wrap tall"><canvas id="c-ind-stack"></canvas></div>
+				</div>
+			</div>
+
+			<div class="section-title">Gas Mix by Industry</div>
+			<div class="chart-card full">
+				<h3>Gas Type Share per Industry (% of sector total)</h3>
+				<p>
+					Each cell shows what % of that industry's emissions come from that gas
+				</p>
+				<div class="chart-wrap heatmap-wrap" id="heatmap-container"></div>
+			</div>
+
+			<div class="section-title">Industry Rankings</div>
+			<div class="chart-card full">
+				<h3>Industry Totals — Horizontal Bar</h3>
+				<p>Cumulative 2000–2023 comparison</p>
+				<div class="chart-wrap short"><canvas id="c-ind-bar"></canvas></div>
+			</div>
+		</div>
+
+		<!-- ═══════════════════════════════════════════════════════════════ -->
+		<!-- PAGE: BY GAS TYPE                                               -->
+		<!-- ═══════════════════════════════════════════════════════════════ -->
+		<div class="page" id="page-gas">
+			<div class="section-title">Gas Type Overview</div>
+			<div class="grid-2-1">
+				<div class="chart-card">
+					<h3>Each Gas Type Over Time</h3>
+					<p>Annual emission trends per greenhouse gas</p>
+					<div class="chart-wrap tall"><canvas id="c-gas-trend"></canvas></div>
+				</div>
+				<div class="chart-card">
+					<h3>Gas Totals (Donut)</h3>
+					<p>Cumulative share of all gas types</p>
+					<div class="chart-wrap"><canvas id="c-gas-donut"></canvas></div>
+				</div>
+			</div>
+
+			<div class="section-title">Gas by Country & Industry</div>
+			<div class="filter-bar">
+				<label>GAS TYPE</label>
+				<select
+					class="filter-select"
+					id="sel-gas"
+					onchange="updateGasDetail()"></select>
+			</div>
+			<div class="grid-2">
+				<div class="chart-card">
+					<h3 id="gas-country-title">Top Countries for Selected Gas</h3>
+					<p>Cumulative emissions for this gas type by country</p>
+					<div class="chart-wrap"><canvas id="c-gas-by-country"></canvas></div>
+				</div>
+				<div class="chart-card">
+					<h3 id="gas-industry-title">Top Industries for Selected Gas</h3>
+					<p>Cumulative emissions for this gas type by industry</p>
+					<div class="chart-wrap"><canvas id="c-gas-by-industry"></canvas></div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			// ── Data ─────────────────────────────────────────────────────────────
+			const D = {
+				years: [
+					2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+					2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021,
+					2022, 2023,
+				],
+				global_emissions: [
+					15182.1, 15203.6, 15098.6, 15256.8, 15313.6, 15623.5, 15584.4,
+					15481.1, 15927.2, 15131.8, 15642.2, 15867.7, 16146.2, 15674.6,
+					15990.4, 15833.5, 16276.6, 16564.2, 16685.9, 16503.5, 15522.3,
+					16894.6, 16178.6, 16752.7,
+				],
+				yoy_pct: [
+					0, 0.14, -0.69, 1.05, 0.37, 2.02, -0.25, -0.66, 2.88, -4.99, 3.37,
+					1.44, 1.76, -2.92, 2.01, -0.98, 2.8, 1.77, 0.74, -1.09, -5.95, 8.84,
+					-4.24, 3.55,
+				],
+				countries: [
+					"China",
+					"India",
+					"United States",
+					"Russia",
+					"Indonesia",
+					"Brazil",
+					"Japan",
+					"South Korea",
+					"Canada",
+					"Germany",
+					"Mexico",
+					"Australia",
+					"South Africa",
+					"France",
+					"United Kingdom",
+				],
+				country_totals: [
+					87855.1, 55160.8, 51256.3, 28238.0, 21737.9, 21394.8, 18881.1,
+					16288.5, 14973.1, 14132.6, 12499.1, 11473.7, 10576.9, 8102.3, 7765.7,
+				],
+				industries: [
+					"Energy",
+					"Manufacturing",
+					"Transport",
+					"Agriculture",
+					"Buildings",
+					"Land Use",
+					"Waste",
+					"Industrial Processes",
+				],
+				industry_totals: [
+					85022.6, 63193.8, 61801.1, 54731.1, 44633.9, 28743.4, 26310.6,
+					15899.3,
+				],
+				gases: ["Co2", "Ch4", "N2O", "Hfcs", "Sf6"],
+				gas_totals: [153238.0, 92545.2, 73727.6, 42027.3, 18797.7],
+				top6_countries: [
+					"China",
+					"India",
+					"United States",
+					"Russia",
+					"Indonesia",
+					"Brazil",
+				],
+				country_trend: {
+					China: [
+						3349.9, 3329.0, 3419.9, 3449.1, 3271.8, 3425.5, 3486.6, 3496.2,
+						3686.1, 3681.2, 3513.2, 3823.1, 3707.2, 3477.9, 3850.5, 3761.2,
+						3904.5, 3951.8, 3941.5, 3835.5, 3976.7, 4043.4, 3416.0, 4057.1,
+					],
+					India: [
+						1896.4, 1923.5, 1759.3, 2002.4, 2010.2, 1999.8, 2145.3, 2025.2,
+						2186.4, 2128.4, 2245.3, 2185.3, 2366.8, 2149.5, 2474.8, 2486.6,
+						2388.5, 2487.7, 2679.1, 2709.7, 2613.9, 2844.0, 2758.1, 2694.8,
+					],
+					"United States": [
+						2336.0, 2209.3, 2318.9, 2126.3, 2251.3, 2181.8, 2255.1, 2147.8,
+						2233.9, 1977.5, 2149.3, 2095.7, 2221.3, 2134.5, 2165.9, 2167.8,
+						2106.6, 2135.9, 2125.4, 2104.6, 1746.0, 2041.8, 2086.0, 1937.5,
+					],
+					Russia: [
+						1182.7, 1190.6, 1220.7, 1209.3, 1199.3, 1213.3, 1180.8, 1161.1,
+						1183.0, 1109.8, 1172.7, 1214.3, 1186.1, 1191.9, 1201.1, 1152.2,
+						1170.4, 1193.2, 1080.9, 1188.2, 1115.3, 1223.7, 1129.5, 1167.9,
+					],
+					Indonesia: [
+						720.7, 726.3, 772.1, 764.9, 795.2, 826.8, 804.5, 845.0, 860.3,
+						757.5, 890.4, 896.5, 935.3, 934.4, 949.3, 836.6, 1028.8, 1030.2,
+						936.9, 1071.1, 975.5, 1084.2, 1145.9, 1149.3,
+					],
+					Brazil: [
+						761.5, 880.2, 588.2, 803.3, 890.0, 883.4, 801.8, 900.6, 798.2,
+						822.6, 818.9, 996.5, 941.5, 927.9, 851.6, 963.1, 997.0, 969.5,
+						973.4, 996.0, 817.3, 1016.4, 989.7, 1006.2,
+					],
+				},
+				industry_names: [
+					"Agriculture",
+					"Buildings",
+					"Energy",
+					"Industrial Processes",
+					"Land Use",
+					"Manufacturing",
+					"Transport",
+					"Waste",
+				],
+				industry_trend: {
+					Agriculture: [
+						2180.2, 2223.8, 2073.4, 2215.1, 2239.7, 2289.1, 2286.3, 2247.4,
+						2155.3, 2196.8, 2302.1, 2342.5, 2319.5, 2329.8, 2250.2, 2317.3,
+						2482.4, 2287.5, 2268.7, 2427.3, 2359.9, 2403.9, 2224.6, 2308.2,
+					],
+					Buildings: [
+						1839.7, 1882.1, 1873.4, 1803.6, 1914.2, 1701.7, 1933.1, 1811.6,
+						1946.3, 1767.3, 1705.8, 1836.7, 1940.8, 1806.9, 1935.9, 1830.2,
+						1767.5, 1911.2, 2044.2, 1926.9, 1743.0, 1943.7, 1828.9, 1939.3,
+					],
+					Energy: [
+						3392.4, 3390.9, 3507.2, 3398.4, 3448.7, 3661.6, 3385.5, 3524.2,
+						3664.5, 3573.1, 3621.5, 3427.7, 3679.8, 3548.2, 3581.5, 3455.5,
+						3524.7, 3738.7, 3569.0, 3601.6, 3273.4, 3666.6, 3539.3, 3848.5,
+					],
+					"Industrial Processes": [
+						535.9, 539.4, 554.7, 566.7, 562.5, 621.3, 680.6, 587.8, 624.0,
+						603.3, 634.7, 650.0, 665.9, 666.5, 685.3, 677.7, 736.3, 771.1,
+						721.7, 748.7, 738.4, 779.1, 766.2, 781.5,
+					],
+					"Land Use": [
+						1051.1, 1070.5, 1091.4, 1022.0, 977.2, 1129.3, 1162.9, 1054.0,
+						1204.7, 1080.5, 1228.4, 1227.6, 1118.6, 1274.7, 1253.4, 1168.7,
+						1314.3, 1316.3, 1326.3, 1317.2, 1162.6, 1440.5, 1370.2, 1381.3,
+					],
+					Manufacturing: [
+						2586.2, 2578.9, 2547.1, 2628.6, 2517.8, 2571.1, 2577.9, 2582.4,
+						2641.7, 2444.9, 2633.3, 2572.1, 2685.9, 2532.2, 2581.9, 2667.4,
+						2745.5, 2696.6, 2824.2, 2745.6, 2605.2, 2770.6, 2760.6, 2696.2,
+					],
+					Transport: [
+						2539.7, 2387.5, 2412.0, 2545.6, 2545.7, 2571.7, 2435.1, 2579.9,
+						2566.2, 2480.1, 2384.2, 2682.6, 2571.8, 2625.5, 2550.6, 2556.1,
+						2682.1, 2683.0, 2762.4, 2573.2, 2519.7, 2691.2, 2740.1, 2715.0,
+					],
+					Waste: [
+						1056.9, 1130.4, 1039.3, 1076.9, 1108.0, 1077.7, 1123.0, 1093.9,
+						1124.4, 985.8, 1132.2, 1128.4, 1164.0, 890.7, 1151.5, 1160.6,
+						1023.9, 1159.7, 1169.5, 1163.1, 1120.0, 1199.1, 948.9, 1082.7,
+					],
+				},
+				gas_names: ["Ch4", "Co2", "Hfcs", "N2O", "Sf6"],
+				gas_trend: {
+					Ch4: [
+						3814.8, 3866.7, 3532.3, 3726.5, 3779.5, 3621.6, 3875.1, 3609.4,
+						3845.7, 3655.6, 3903.3, 3963.5, 4001.9, 3726.3, 4023.2, 3923.9,
+						3939.3, 3913.9, 4014.4, 4088.3, 3906.8, 4104.7, 3912.2, 3796.2,
+					],
+					Co2: [
+						6203.3, 6171.6, 6181.5, 6382.9, 6357.0, 6641.4, 6245.2, 6435.8,
+						6538.6, 6310.4, 6333.3, 6243.8, 6410.6, 6588.2, 6223.5, 6145.5,
+						6535.8, 6629.2, 6564.1, 6500.9, 5923.3, 6570.2, 6421.9, 6680.1,
+					],
+					Hfcs: [
+						1566.4, 1601.9, 1622.1, 1661.2, 1588.6, 1659.8, 1702.5, 1693.1,
+						1744.6, 1556.7, 1778.3, 1747.5, 1785.4, 1569.7, 1853.0, 1799.9,
+						1747.8, 1914.5, 2002.1, 1782.2, 1836.8, 2032.0, 1791.7, 1989.5,
+					],
+					N2O: [
+						2905.4, 2956.9, 2996.8, 2800.2, 2894.2, 2990.1, 3060.7, 3019.7,
+						3053.8, 2895.5, 2894.4, 3128.3, 3164.6, 2989.9, 3092.2, 3148.3,
+						3118.2, 3262.0, 3267.5, 3278.7, 3025.5, 3268.6, 3138.9, 3377.4,
+					],
+					Sf6: [
+						692.2, 606.6, 765.9, 686.1, 694.4, 710.6, 701.0, 723.1, 744.5,
+						713.6, 732.9, 784.7, 783.8, 800.5, 798.4, 815.7, 935.5, 844.4,
+						837.8, 853.4, 829.9, 919.1, 914.0, 909.6,
+					],
+				},
+				region_names: [
+					"Africa",
+					"Asia",
+					"Europe",
+					"North America",
+					"Oceania",
+					"South America",
+				],
+				region_trend: {
+					Africa: [
+						451.5, 434.2, 360.9, 445.8, 437.3, 441.4, 445.4, 454.5, 462.3,
+						425.2, 402.5, 466.7, 450.0, 424.7, 443.7, 445.3, 439.1, 467.2,
+						467.8, 451.3, 333.1, 477.1, 476.5, 473.2,
+					],
+					Asia: [
+						7429.1, 7472.3, 7496.9, 7543.3, 7540.4, 7750.5, 7930.1, 7803.7,
+						8206.1, 7995.6, 8131.3, 8359.1, 8468.7, 8016.9, 8641.7, 8478.2,
+						8783.4, 8937.1, 9164.7, 9139.3, 8970.5, 9360.9, 8841.0, 9462.6,
+					],
+					Europe: [
+						2684.3, 2682.8, 2696.6, 2709.4, 2611.3, 2685.4, 2508.9, 2567.8,
+						2566.5, 2376.5, 2506.3, 2403.2, 2402.0, 2435.0, 2333.4, 2246.9,
+						2240.2, 2357.1, 2221.6, 2227.2, 2181.0, 2280.6, 2129.7, 2184.9,
+					],
+					"North America": [
+						3376.9, 3286.8, 3466.1, 3269.4, 3391.5, 3364.8, 3410.4, 3271.5,
+						3402.7, 3055.0, 3323.5, 3191.1, 3385.3, 3373.3, 3233.8, 3219.3,
+						3314.2, 3332.6, 3369.2, 3276.2, 2769.3, 3256.2, 3252.0, 3137.5,
+					],
+					Oceania: [
+						478.7, 447.2, 489.9, 485.6, 443.2, 498.0, 487.7, 483.0, 491.4,
+						457.0, 459.7, 451.1, 498.8, 496.7, 486.2, 480.8, 502.7, 500.6,
+						489.3, 413.6, 451.0, 503.5, 489.8, 488.2,
+					],
+					"South America": [
+						761.5, 880.2, 588.2, 803.3, 890.0, 883.4, 801.8, 900.6, 798.2,
+						822.6, 818.9, 996.5, 941.5, 927.9, 851.6, 963.1, 997.0, 969.5,
+						973.4, 996.0, 817.3, 1016.4, 989.7, 1006.2,
+					],
+				},
+				heatmap_industries: [
+					"Agriculture",
+					"Buildings",
+					"Energy",
+					"Industrial Processes",
+					"Land Use",
+					"Manufacturing",
+					"Transport",
+					"Waste",
+				],
+				heatmap_gases: ["Ch4", "Co2", "Hfcs", "N2O", "Sf6"],
+				heatmap_data: [
+					[42.0, 17.1, 7.6, 31.2, 2.1],
+					[20.4, 42.5, 19.5, 15.8, 1.7],
+					[27.1, 45.5, 8.4, 12.5, 6.4],
+					[5.7, 38.1, 27.1, 11.9, 17.2],
+					[22.8, 37.1, 5.0, 33.9, 1.2],
+					[15.8, 42.7, 15.6, 15.6, 10.2],
+					[11.7, 58.0, 9.6, 18.4, 2.4],
+					[48.5, 25.5, 1.5, 23.1, 1.5],
+				],
+				per_capita_countries: [
+					"Australia",
+					"Canada",
+					"South Korea",
+					"Russia",
+					"South Africa",
+					"Germany",
+					"United States",
+					"Japan",
+					"France",
+					"United Kingdom",
+					"Brazil",
+					"Mexico",
+					"Indonesia",
+					"China",
+					"India",
+				],
+				per_capita_values: [
+					441.298, 394.028, 313.24, 194.745, 176.281, 168.245, 155.322, 151.049,
+					119.151, 114.201, 99.511, 96.147, 79.047, 62.754, 39.401,
+				],
+				kpi_total: 380.3,
+				kpi_peak_year: 2021,
+				kpi_top_country: "China",
+				kpi_recent_change: -28.7,
+				kpi_countries: 15,
+				kpi_years: 24,
+			};
+
+			// ── Colour palette ────────────────────────────────────────────────────
+			const COLORS = [
+				"#58A6FF",
+				"#3FB950",
+				"#F78166",
+				"#D2A8FF",
+				"#FFA657",
+				"#E3B341",
+				"#79C0FF",
+				"#56D364",
+				"#F085A2",
+				"#40C4FF",
+				"#FF7B72",
+				"#85E89D",
+				"#FFAB70",
+				"#B392F0",
+				"#2188FF",
+			];
+			const GAS_C = {
+				Co2: "#F78166",
+				Ch4: "#58A6FF",
+				N2O: "#3FB950",
+				Hfcs: "#D2A8FF",
+				Sf6: "#FFA657",
+			};
+			const IND_C = {
+				Energy: "#F78166",
+				Manufacturing: "#58A6FF",
+				Transport: "#3FB950",
+				Agriculture: "#FFA657",
+				Buildings: "#D2A8FF",
+				Waste: "#E3B341",
+				"Land Use": "#79C0FF",
+				"Industrial Processes": "#56D364",
+			};
+
+			// ── Chart defaults ────────────────────────────────────────────────────
+			Chart.defaults.color = "#8B949E";
+			Chart.defaults.font.family = "'Outfit', sans-serif";
+			Chart.defaults.plugins.legend.labels.boxWidth = 10;
+			Chart.defaults.plugins.legend.labels.padding = 14;
+			Chart.defaults.plugins.legend.labels.font = { size: 11 };
+			Chart.defaults.plugins.tooltip.backgroundColor = "#161B22";
+			Chart.defaults.plugins.tooltip.borderColor = "#30363D";
+			Chart.defaults.plugins.tooltip.borderWidth = 1;
+			Chart.defaults.plugins.tooltip.titleColor = "#E6EDF3";
+			Chart.defaults.plugins.tooltip.bodyColor = "#8B949E";
+			Chart.defaults.plugins.tooltip.padding = 10;
+			Chart.defaults.scale.grid.color = "rgba(255,255,255,0.05)";
+
+			const charts = {};
+			function makeChart(id, cfg) {
+				if (charts[id]) charts[id].destroy();
+				charts[id] = new Chart(document.getElementById(id), cfg);
+				return charts[id];
+			}
+
+			// ── Helpers ───────────────────────────────────────────────────────────
+			function fmt(n) {
+				return n >= 1e6
+					? (n / 1e6).toFixed(1) + "M"
+					: n >= 1e3
+						? (n / 1e3).toFixed(1) + "k"
+						: n.toFixed(0);
+			}
+
+			function hexToRgba(hex, a) {
+				const r = parseInt(hex.slice(1, 3), 16),
+					g = parseInt(hex.slice(3, 5), 16),
+					b = parseInt(hex.slice(5, 7), 16);
+				return `rgba(${r},${g},${b},${a})`;
+			}
+
+			// ── Tabs ──────────────────────────────────────────────────────────────
+			function showPage(name, btn) {
+				document
+					.querySelectorAll(".page")
+					.forEach((p) => p.classList.remove("active"));
+				document
+					.querySelectorAll(".tab-btn")
+					.forEach((b) => b.classList.remove("active"));
+				document.getElementById("page-" + name).classList.add("active");
+				btn.classList.add("active");
+				setTimeout(() => initPage(name), 50);
+			}
+
+			const inited = {};
+			function initPage(name) {
+				if (inited[name]) return;
+				inited[name] = true;
+				if (name === "overview") initOverview();
+				if (name === "country") initCountry();
+				if (name === "industry") initIndustry();
+				if (name === "gas") initGas();
+			}
+
+			// ── KPIs ──────────────────────────────────────────────────────────────
+			document.getElementById("kpi-total").textContent = D.kpi_total + " Gt";
+			document.getElementById("kpi-peak").textContent = D.kpi_peak_year;
+			document.getElementById("kpi-top").textContent = D.kpi_top_country;
+			document.getElementById("kpi-change").textContent =
+				(D.kpi_recent_change > 0 ? "+" : "") + D.kpi_recent_change + "%";
+			document.getElementById("kpi-countries").textContent = D.kpi_countries;
+			document.getElementById("kpi-years").textContent = D.kpi_years;
+
+			// ══════════════════════════════════════════════════════════════════════
+			// OVERVIEW PAGE
+			// ══════════════════════════════════════════════════════════════════════
+			function initOverview() {
+				// Global trend
+				makeChart("c-global-trend", {
+					type: "line",
+					data: {
+						labels: D.years,
+						datasets: [
+							{
+								label: "Global Emissions (Mt)",
+								data: D.global_emissions,
+								borderColor: "#58A6FF",
+								backgroundColor: hexToRgba("#58A6FF", 0.1),
+								fill: true,
+								tension: 0.4,
+								pointRadius: 2,
+								pointHoverRadius: 5,
+								borderWidth: 2.5,
+							},
+						],
+					},
+					options: {
+						responsive: true,
+						maintainAspectRatio: true,
+						plugins: { legend: { display: false } },
+						scales: { y: { ticks: { callback: (v) => fmt(v) } } },
+					},
+				});
+
+				// YoY
+				const yoyColors = D.yoy_pct.map((v) =>
+					v >= 0 ? hexToRgba("#F78166", 0.75) : hexToRgba("#3FB950", 0.75),
+				);
+				makeChart("c-yoy", {
+					type: "bar",
+					data: {
+						labels: D.years,
+						datasets: [
+							{
+								label: "YoY %",
+								data: D.yoy_pct,
+								backgroundColor: yoyColors,
+								borderColor: "transparent",
+								borderRadius: 3,
+							},
+						],
+					},
+					options: {
+						responsive: true,
+						maintainAspectRatio: true,
+						plugins: { legend: { display: false } },
+						scales: { y: { ticks: { callback: (v) => v.toFixed(1) + "%" } } },
+					},
+				});
+
+				// Gas pie
+				makeChart("c-gas-pie", {
+					type: "doughnut",
+					data: {
+						labels: D.gases,
+						datasets: [
+							{
+								data: D.gas_totals,
+								backgroundColor: D.gases.map((g) => GAS_C[g] || "#888"),
+								borderColor: "#0D1117",
+								borderWidth: 3,
+								hoverOffset: 6,
+							},
+						],
+					},
+					options: {
+						responsive: true,
+						cutout: "55%",
+						plugins: { legend: { position: "bottom" } },
+					},
+				});
+
+				// Industry pie
+				makeChart("c-ind-pie", {
+					type: "doughnut",
+					data: {
+						labels: D.industries,
+						datasets: [
+							{
+								data: D.industry_totals,
+								backgroundColor: D.industries.map((i) => IND_C[i] || "#888"),
+								borderColor: "#0D1117",
+								borderWidth: 3,
+								hoverOffset: 6,
+							},
+						],
+					},
+					options: {
+						responsive: true,
+						cutout: "55%",
+						plugins: {
+							legend: { position: "bottom", labels: { font: { size: 9 } } },
+						},
+					},
+				});
+
+				// Region stacked area
+				const regionDatasets = D.region_names.map((r, i) => ({
+					label: r,
+					data: D.region_trend[r],
+					backgroundColor: hexToRgba(COLORS[i], 0.65),
+					borderColor: COLORS[i],
+					fill: true,
+					tension: 0.4,
+					borderWidth: 1.5,
+					pointRadius: 0,
+				}));
+				makeChart("c-region", {
+					type: "line",
+					data: { labels: D.years, datasets: regionDatasets },
+					options: {
+						responsive: true,
+						plugins: {
+							legend: { position: "bottom", labels: { font: { size: 9 } } },
+						},
+						scales: {
+							x: { stacked: true },
+							y: { stacked: true, ticks: { callback: (v) => fmt(v) } },
+						},
+					},
+				});
+			}
+
+			// ══════════════════════════════════════════════════════════════════════
+			// COUNTRY PAGE
+			// ══════════════════════════════════════════════════════════════════════
+			function initCountry() {
+				// Trend chart
+				const ctDatasets = D.top6_countries.map((c, i) => ({
+					label: c,
+					data: D.country_trend[c],
+					borderColor: COLORS[i],
+					backgroundColor: "transparent",
+					tension: 0.4,
+					borderWidth: 2,
+					pointRadius: 2,
+					pointHoverRadius: 5,
+				}));
+				makeChart("c-country-trend", {
+					type: "line",
+					data: { labels: D.years, datasets: ctDatasets },
+					options: {
+						responsive: true,
+						plugins: { legend: { position: "bottom" } },
+						scales: { y: { ticks: { callback: (v) => fmt(v) } } },
+					},
+				});
+
+				// Ranking table
+				const maxVal = Math.max(...D.country_totals);
+				let tableHtml = `<table class="rank-table"><thead><tr><th>#</th><th>Country</th><th>Total (Mt)</th><th style="min-width:140px">Share</th></tr></thead><tbody>`;
+				D.countries.forEach((c, i) => {
+					const val = D.country_totals[i];
+					const pct = ((val / maxVal) * 100).toFixed(0);
+					const color = COLORS[i % COLORS.length];
+					tableHtml += `<tr>
+      <td><span class="rank-num" style="background:${hexToRgba(color, 0.15)};color:${color}">${i + 1}</span></td>
+      <td style="font-weight:600">${c}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${(val / 1000).toFixed(1)}k</td>
+      <td class="bar-cell"><div class="bar-inner" style="width:${pct}%;background:${color};height:6px"></div></td>
+    </tr>`;
+				});
+				tableHtml += "</tbody></table>";
+				document.getElementById("country-rank-table").innerHTML = tableHtml;
+
+				// Per capita
+				makeChart("c-per-capita", {
+					type: "bar",
+					data: {
+						labels: D.per_capita_countries,
+						datasets: [
+							{
+								label: "Mt per million people",
+								data: D.per_capita_values,
+								backgroundColor: D.per_capita_countries.map(
+									(_, i) => COLORS[i % COLORS.length],
+								),
+								borderRadius: 5,
+								borderColor: "transparent",
+							},
+						],
+					},
+					options: {
+						responsive: true,
+						indexAxis: "y",
+						plugins: { legend: { display: false } },
+						scales: { x: { ticks: { callback: (v) => v.toFixed(0) } } },
+					},
+				});
+
+				// Gas stack for top6
+				const gasTypes = D.gas_names;
+				const gasStackDatasets = gasTypes.map((g, gi) => ({
+					label: g,
+					data: D.top6_countries.map((c) => {
+						// We'll compute this from raw gas totals per country — approximate with global gas/country ratio
+						// For viz we use country total * global gas share
+						const globalGasShare =
+							D.gas_totals[gi] / D.gas_totals.reduce((a, b) => a + b, 0);
+						const idx = D.countries.indexOf(c);
+						return idx >= 0 ? D.country_totals[idx] * globalGasShare : 0;
+					}),
+					backgroundColor: GAS_C[g] || "#888",
+					borderColor: "#0D1117",
+					borderWidth: 1,
+				}));
+				makeChart("c-country-gas-stack", {
+					type: "bar",
+					data: { labels: D.top6_countries, datasets: gasStackDatasets },
+					options: {
+						responsive: true,
+						plugins: { legend: { position: "bottom" } },
+						scales: {
+							x: { stacked: true },
+							y: { stacked: true, ticks: { callback: (v) => fmt(v) } },
+						},
+					},
+				});
+
+				// Populate select
+				const sel = document.getElementById("sel-country");
+				D.countries.forEach((c) => {
+					const opt = document.createElement("option");
+					opt.value = c;
+					opt.textContent = c;
+					sel.appendChild(opt);
+				});
+				updateCountryDetail();
+			}
+
+			let countryDetailChart = null;
+			function updateCountryDetail() {
+				const country = document.getElementById("sel-country").value;
+				const metric = document.getElementById("sel-metric").value;
+				const idx = D.countries.indexOf(country);
+
+				document.getElementById("country-detail-title").textContent =
+					country +
+					" — Emissions by " +
+					(metric === "industry" ? "Industry" : "Gas Type");
+				document.getElementById("country-detail-sub").textContent =
+					"Annual breakdown 2000–2023 (approximate based on national share)";
+
+				const countryShare =
+					D.country_totals[idx] / D.country_totals.reduce((a, b) => a + b, 0);
+				let datasets;
+				if (metric === "industry") {
+					datasets = D.industry_names.map((ind, i) => {
+						const globalShare =
+							D.industry_totals[i] /
+							D.industry_totals.reduce((a, b) => a + b, 0);
+						const data = D.industry_trend[ind].map(
+							(v) =>
+								v *
+								(countryShare /
+									(D.industry_totals.reduce((a, b) => a + b, 0) /
+										D.industry_totals.reduce((a, b) => a + b, 0))),
+						);
+						return {
+							label: ind,
+							data: D.industry_trend[ind].map(
+								(v) => +(v * countryShare * 1.0).toFixed(1),
+							),
+							backgroundColor: IND_C[ind] || "#888",
+							borderColor: "#0D1117",
+							borderWidth: 1,
+						};
+					});
+				} else {
+					datasets = D.gas_names.map((g, i) => {
+						return {
+							label: g,
+							data: D.gas_trend[g].map((v) => +(v * countryShare).toFixed(1)),
+							backgroundColor: GAS_C[g] || "#888",
+							borderColor: "#0D1117",
+							borderWidth: 1,
+						};
+					});
+				}
+				makeChart("c-country-detail", {
+					type: "bar",
+					data: { labels: D.years, datasets },
+					options: {
+						responsive: true,
+						plugins: { legend: { position: "bottom" } },
+						scales: {
+							x: { stacked: true },
+							y: { stacked: true, ticks: { callback: (v) => fmt(v) } },
+						},
+					},
+				});
+			}
+
+			// ══════════════════════════════════════════════════════════════════════
+			// INDUSTRY PAGE
+			// ══════════════════════════════════════════════════════════════════════
+			function initIndustry() {
+				// Line trend
+				const indDatasets = D.industry_names.map((ind, i) => ({
+					label: ind,
+					data: D.industry_trend[ind],
+					borderColor: IND_C[ind] || COLORS[i],
+					backgroundColor: "transparent",
+					tension: 0.4,
+					borderWidth: 2,
+					pointRadius: 1,
+				}));
+				makeChart("c-ind-trend", {
+					type: "line",
+					data: { labels: D.years, datasets: indDatasets },
+					options: {
+						responsive: true,
+						plugins: {
+							legend: { position: "bottom", labels: { font: { size: 9 } } },
+						},
+						scales: { y: { ticks: { callback: (v) => fmt(v) } } },
+					},
+				});
+
+				// Stacked area
+				const indStackDatasets = D.industry_names.map((ind, i) => ({
+					label: ind,
+					data: D.industry_trend[ind],
+					borderColor: IND_C[ind] || COLORS[i],
+					backgroundColor: hexToRgba(IND_C[ind] || COLORS[i], 0.65),
+					fill: true,
+					tension: 0.4,
+					borderWidth: 1,
+					pointRadius: 0,
+				}));
+				makeChart("c-ind-stack", {
+					type: "line",
+					data: { labels: D.years, datasets: indStackDatasets },
+					options: {
+						responsive: true,
+						plugins: {
+							legend: { position: "bottom", labels: { font: { size: 9 } } },
+						},
+						scales: {
+							x: { stacked: true },
+							y: { stacked: true, ticks: { callback: (v) => fmt(v) } },
+						},
+					},
+				});
+
+				// Heatmap
+				const gases = D.heatmap_gases;
+				const industries = D.heatmap_industries;
+				const data = D.heatmap_data;
+
+				function heatColor(pct) {
+					const v = pct / 100;
+					if (v < 0.1) return "#0d1117";
+					if (v < 0.2) return "#0d2e1a";
+					if (v < 0.35) return "#1a4a1a";
+					if (v < 0.5) return "#2d6a2d";
+					if (v < 0.65) return "#3FB950";
+					if (v < 0.8) return "#FFA657";
+					return "#F78166";
+				}
+
+				let hmHtml = `<table class="heatmap-table"><thead><tr><th></th>`;
+				gases.forEach((g) => {
+					hmHtml += `<th>${g}</th>`;
+				});
+				hmHtml += "</tr></thead><tbody>";
+				industries.forEach((ind, ri) => {
+					hmHtml += `<tr><td class="hm-label">${ind}</td>`;
+					data[ri].forEach((val) => {
+						const bg = heatColor(val);
+						const fg = val > 40 ? "#0d1117" : "#E6EDF3";
+						hmHtml += `<td style="background:${bg};color:${fg}">${val}%</td>`;
+					});
+					hmHtml += "</tr>";
+				});
+				hmHtml += "</tbody></table>";
+				document.getElementById("heatmap-container").innerHTML = hmHtml;
+
+				// Horizontal bar
+				makeChart("c-ind-bar", {
+					type: "bar",
+					data: {
+						labels: D.industries,
+						datasets: [
+							{
+								label: "Total Emissions (Mt)",
+								data: D.industry_totals,
+								backgroundColor: D.industries.map((i) => IND_C[i] || "#888"),
+								borderRadius: 5,
+								borderColor: "transparent",
+							},
+						],
+					},
+					options: {
+						responsive: true,
+						indexAxis: "y",
+						plugins: { legend: { display: false } },
+						scales: { x: { ticks: { callback: (v) => fmt(v) } } },
+					},
+				});
+			}
+
+			// ══════════════════════════════════════════════════════════════════════
+			// GAS PAGE
+			// ══════════════════════════════════════════════════════════════════════
+			function initGas() {
+				// Line trend
+				const gasDatasets = D.gas_names.map((g, i) => ({
+					label: g,
+					data: D.gas_trend[g],
+					borderColor: GAS_C[g] || COLORS[i],
+					backgroundColor: "transparent",
+					tension: 0.4,
+					borderWidth: 2.5,
+					pointRadius: 2,
+				}));
+				makeChart("c-gas-trend", {
+					type: "line",
+					data: { labels: D.years, datasets: gasDatasets },
+					options: {
+						responsive: true,
+						plugins: { legend: { position: "bottom" } },
+						scales: { y: { ticks: { callback: (v) => fmt(v) } } },
+					},
+				});
+
+				// Donut
+				makeChart("c-gas-donut", {
+					type: "doughnut",
+					data: {
+						labels: D.gases,
+						datasets: [
+							{
+								data: D.gas_totals,
+								backgroundColor: D.gases.map((g) => GAS_C[g] || "#888"),
+								borderColor: "#0D1117",
+								borderWidth: 3,
+								hoverOffset: 10,
+							},
+						],
+					},
+					options: {
+						responsive: true,
+						cutout: "60%",
+						plugins: { legend: { position: "bottom" } },
+					},
+				});
+
+				// Populate gas selector
+				const sel = document.getElementById("sel-gas");
+				D.gas_names.forEach((g) => {
+					const opt = document.createElement("option");
+					opt.value = g;
+					opt.textContent = g;
+					sel.appendChild(opt);
+				});
+				updateGasDetail();
+			}
+
+			function updateGasDetail() {
+				const gas = document.getElementById("sel-gas").value;
+				const gasIdx = D.gas_names.indexOf(gas);
+				const gasColor = GAS_C[gas] || "#58A6FF";
+
+				// gas by country
+				const countryShare = D.gas_totals[gasIdx];
+				const countryData = D.countries.map((c, ci) => {
+					const cShare =
+						D.country_totals[ci] / D.country_totals.reduce((a, b) => a + b, 0);
+					return +(countryShare * cShare).toFixed(1);
+				});
+				makeChart("c-gas-by-country", {
+					type: "bar",
+					data: {
+						labels: D.countries,
+						datasets: [
+							{
+								label: "Emissions (Mt)",
+								data: countryData,
+								backgroundColor: hexToRgba(gasColor, 0.75),
+								borderRadius: 4,
+								borderColor: "transparent",
+							},
+						],
+					},
+					options: {
+						responsive: true,
+						indexAxis: "y",
+						plugins: { legend: { display: false } },
+						scales: { x: { ticks: { callback: (v) => fmt(v) } } },
+					},
+				});
+
+				// gas by industry (use heatmap data)
+				const gasHmIdx = D.heatmap_gases.indexOf(gas);
+				const indData = D.heatmap_industries.map((ind, ri) => {
+					const indTotalIdx = D.industry_names.indexOf(ind);
+					const pct = gasHmIdx >= 0 ? D.heatmap_data[ri][gasHmIdx] / 100 : 0;
+					const indTotal = D.industry_totals[indTotalIdx] || 0;
+					return +(indTotal * pct).toFixed(1);
+				});
+				makeChart("c-gas-by-industry", {
+					type: "bar",
+					data: {
+						labels: D.heatmap_industries,
+						datasets: [
+							{
+								label: "Emissions (Mt)",
+								data: indData,
+								backgroundColor: hexToRgba(gasColor, 0.75),
+								borderRadius: 4,
+								borderColor: "transparent",
+							},
+						],
+					},
+					options: {
+						responsive: true,
+						indexAxis: "y",
+						plugins: { legend: { display: false } },
+						scales: { x: { ticks: { callback: (v) => fmt(v) } } },
+					},
+				});
+			}
+
+			// ── Init first page ───────────────────────────────────────────────────
+			initPage("overview");
+		</script>
+	</body>
+</html>
