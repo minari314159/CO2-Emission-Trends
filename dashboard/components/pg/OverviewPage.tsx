@@ -3,6 +3,7 @@
 import { Grid, Box, Typography, Paper } from "@mui/material";
 import { useMemo } from "react";
 import type { DashboardData } from "@/types";
+import SectionTitle from "../widgets/SectionTitle";
 import StatCard from "@/components/widgets/StatCard";
 import LineChart from "@/components/charts/LineChart";
 import BarChart from "@/components/charts/BarChart";
@@ -14,25 +15,6 @@ import {
 	hexToRgba,
 	fmt,
 } from "@/lib/colours";
-
-function SectionTitle({ children }: { children: string }) {
-	return (
-		<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2, mt: 1 }}>
-			<Typography
-				sx={{
-					fontFamily: "var(--font-mono)",
-					fontSize: 10,
-					fontWeight: 700,
-					color: "text.secondary",
-					letterSpacing: 2,
-					textTransform: "uppercase",
-				}}>
-				{children}
-			</Typography>
-			<Box sx={{ flex: 1, height: "1px", background: "var(--border)" }} />
-		</Box>
-	);
-}
 
 interface Props {
 	data: DashboardData;
@@ -102,8 +84,6 @@ export default function OverviewPage({ data: D }: Props) {
 	];
 
 	// Chart data
-	// Then replace your plain object declarations with useMemo versions:
-
 	const globalTrendData = useMemo(
 		() => ({
 			labels: D.years,

@@ -3,28 +3,10 @@
 import { Grid, Box, Typography, Paper } from "@mui/material";
 import { useMemo } from "react";
 import type { DashboardData } from "@/types";
+import SectionTitle from "../widgets/SectionTitle";
 import LineChart from "@/components/charts/LineChart";
 import BarChart from "@/components/charts/BarChart";
 import { COLORS, INDUSTRY_COLORS, hexToRgba, fmt } from "@/lib/colours";
-
-function SectionTitle({ children }: { children: string }) {
-	return (
-		<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2, mt: 1 }}>
-			<Typography
-				sx={{
-					fontFamily: "var(--font-mono)",
-					fontSize: 10,
-					fontWeight: 700,
-					color: "text.secondary",
-					letterSpacing: 2,
-					textTransform: "uppercase",
-				}}>
-				{children}
-			</Typography>
-			<Box sx={{ flex: 1, height: "1px", background: "var(--border)" }} />
-		</Box>
-	);
-}
 
 function heatColor(pct: number) {
 	const v = pct / 100;
